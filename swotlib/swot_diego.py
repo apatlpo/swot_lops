@@ -12,26 +12,33 @@ crs = cartopy.crs.PlateCarree()
 import cartopy.feature as cfeature
 import pyproj
 
-#import dask_jobqueue
-#import dask
-#from distributed import Client
+if os.path.isdir("/home/datawork-lops-osi/"):
+    platform="ifremer"
+else:
+    platform="cnes"
+
 
 # CLS libraries
-import swot_calval.io
 import pyinterp
-from assumerole import assumerole
-import s3fs
 
-# load external libraries
+if platform=="ifremer":
+    pass
+elif platform=="cnes":
+    import swot_calval.io
+    from assumerole import assumerole
+    import s3fs
 
-root_path = "/work/HELPDESK_SWOTLR/swot_diego/"
-
-lib_path = os.path.join(root_path, 'libs')
-sys.path.append(os.path.join(lib_path, 'SWOT-OpenToolkit/src/'))
-#sys.path.append(os.path.join(lib_path, 'SWOT-OpenToolkit/data/'))
-sys.path.append(os.path.join(lib_path, 'search_swot-master'))
-
-fig_dir = f'/work/scratch/data/{os.environ["USER"]}/figs/'
+    # load external libraries
+    
+    root_path = "/work/HELPDESK_SWOTLR/swot_diego/"
+    
+    lib_path = os.path.join(root_path, 'libs')
+    sys.path.append(os.path.join(lib_path, 'SWOT-OpenToolkit/src/'))
+    #sys.path.append(os.path.join(lib_path, 'SWOT-OpenToolkit/data/'))
+    sys.path.append(os.path.join(lib_path, 'search_swot-master'))
+    
+    fig_dir = f'/work/scratch/data/{os.environ["USER"]}/figs/'
+    
 
 # ---------------------- common --------------------------------
 
@@ -1026,7 +1033,7 @@ def load_swot_da(
     ## reduce to data arrays
     da_mask = None
     if level=='L3':
-        if v=="sig0" and rescale_sigma0:
+        if v=="sig0" and s0_rescale:
             rescale_sigma0(ds_l3)
         if v=='ssh':
             da = (
@@ -1097,7 +1104,7 @@ def load_swot_da(
         time_min = pd.to_datetime(np.nanmin(da['left'].time.values))
         time_max = pd.to_datetime(np.nanmin(da['left'].time.values))
     elif level=='L2_unsmoothed_cvl':
-        if v=="sig0" and rescale_sigma0:
+        if v=="sig0" and s0_rescale:
             rescale_sigma0(ds_l2)
         if v=='ssh':
             da = (
