@@ -22,7 +22,7 @@ else:
 import pyinterp
 
 if platform=="ifremer":
-    pass
+    root_path = "/home/datawork-lops-osi/aponte/swot"
 elif platform=="cnes":
     import swot_calval.io
     from assumerole import assumerole
@@ -592,19 +592,27 @@ def mask_filter(
 
     ## Gaussian filtering
     sigma = lbd/dx
-    kw = dict(sigma=(sigma,)*2, truncate=truncate)
-    _da = gaussian_filter(da.fillna(0.), **kw)
-    _w = gaussian_filter((0*da+1).fillna(0.), **kw)
-    ds["smoothed2"] = (da.dims, _da/_w)
-
-    da_low = ds.smoothed2
-    da_high = da - ds.smoothed2
+    da_low, da_high = filter_gaussian(da, sigma, truncate=2)
+    ds["smoothed2"] = da_low
 
     if dev:
         return da_low, da_high, ds
 
     return da_low, da_high
 
+def filter_gaussian(da, sigma, mask=None, truncate=2, **kwargs):
+    """ apply a Gaussian filter """
+    from scipy.ndimage import gaussian_filter
+    kw = dict(sigma=(sigma,)*2, truncate=truncate)
+    _da = gaussian_filter(da.fillna(0.), **kw)
+    _w = gaussian_filter((0*da+1).fillna(0.), **kw)
+    low = xr.DataArray(_da/_w, coords=da.coords).rename(da.name+"_low")
+    high = (da - low).rename(da.name+"_high")
+    if mask is not None:
+        low = low.where(mask)
+        high = high.where(mask)
+    return low, high
+    
 def plot_map(extent, figsize=(15,10), fig=None, ax=None):
 
     if fig is None:
